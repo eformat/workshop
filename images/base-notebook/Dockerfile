@@ -27,8 +27,11 @@ RUN yum install -y curl wget java-headless bzip2 gnupg2 sqlite3 \
     && bash Miniconda3-4.2.12-Linux-x86_64.sh -b -p $CONDA_DIR \
     && rm Miniconda3-4.2.12-Linux-x86_64.sh \
     && export PATH=/opt/conda/bin:$PATH \
-    && yum install -y gcc gcc-c++ glibc-devel \
-    && /opt/conda/bin/conda install --quiet --yes python=3.5 'nomkl' \
+    && yum install -y gcc gcc-c++ glibc-devel
+
+RUN export PATH=/opt/conda/bin:$PATH \
+    && conda config --add channels r \
+    && conda install --quiet --yes python=3.5 'nomkl' \
 			    'ipywidgets=5.2*' \
 			    'matplotlib=1.5*' \
 			    'scipy=0.17*' \
@@ -37,6 +40,24 @@ RUN yum install -y curl wget java-headless bzip2 gnupg2 sqlite3 \
 			    statsmodels \
 			    pandas \
 			    'dill=0.2*' \
+			    'r-base=3.3.2' \
+			    'r-irkernel=0.7*' \
+			    'r-plyr=1.8*' \
+			    'r-devtools=1.12*' \
+			    'r-dplyr=0.5*' \
+			    'r-ggplot2=2.2*' \
+			    'r-tidyr=0.6*' \
+			    'r-shiny=0.14*' \
+			    'r-rmarkdown=1.2*' \
+			    'r-forecast=7.3*' \
+			    'r-stringr=1.1*' \
+			    'r-rsqlite=1.1*' \
+			    'r-reshape2=1.4*' \
+			    'r-nycflights13=0.2*' \
+			    'r-caret=6.0*' \
+			    'r-rcurl=1.95*' \
+			    'r-crayon=1.3*' \
+			    'r-randomforest=4.6*' \
 			    notebook \
 			    jupyter \
     && pip install widgetsnbextension \
@@ -52,8 +73,7 @@ RUN yum install -y curl wget java-headless bzip2 gnupg2 sqlite3 \
     && chown -R $NB_USER $CONDA_DIR \
     && conda remove --quiet --yes --force qt pyqt \
     && conda remove --quiet --yes --force --feature mkl ; conda clean -tipsy
-
-
+  
 ENV PATH /opt/conda/bin:$PATH
 
 ENV APACHE_SPARK_VERSION 2.1.0
@@ -97,7 +117,19 @@ LABEL io.k8s.description="PySpark Jupyter Notebook." \
       io.openshift.expose-services="8888:http"
 
 ENV HOME /home/$NB_USER
+
+#FIXME move up, R plotting
+RUN yum -y install libXrender \
+    	   	   libXext \
+		   dejavu-fonts-common \
+		   liberation-fonts-common \
+                   liberation-mono-fonts \
+                   liberation-narrow-fonts \
+                   liberation-sans-fonts \
+                   liberation-serif-fonts
+
 USER $NB_UID
 
+# ENV PYSPARK_SUBMIT_ARGS="--master spark://spark.oshinko.svc.cluster.local:7077 pyspark-shell"
 
 CMD ["/start.sh"]
